@@ -3,6 +3,9 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_httpauth import HTTPBasicAuth
+from flasgger import Swagger
+from configuration import swagger_config
+
 from WarehouseServer import serial_thread
 
 # initialization
@@ -16,7 +19,10 @@ app.config["JSON_SORT_KEYS"] = False
 # extensions
 db = SQLAlchemy(app)
 auth = HTTPBasicAuth()
-ser = serial_thread.SerialThread()
+com = serial_thread.WarehouseCommunicator()
 
 from WarehouseServer import views, models
 from models import User
+
+Swagger(app)
+

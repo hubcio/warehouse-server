@@ -29,3 +29,26 @@ class SerialThread(threading.Thread):
 
     def send_command(self, command):
         self.serial.write(command)
+
+
+class WarehouseCommunicator(SerialThread):
+    position_x = 0
+    position_y = 0
+    position_z = 0
+    current_x = 0
+    current_y = 0
+    current_z = 0
+
+    def run(self):
+        while True:
+            for line in self.serial:
+                try:
+                    self._state = json.loads(line)
+                    self.position_x = self._state['x']
+                    self.position_y = self._state['y']
+                    self.position_z = self._state['z']
+                    self.current_x = self._state['cx']
+                    self.current_y = self._state['cy']
+                    self.current_z = self._state['cz']
+                except Exception as exc:
+                    logger.error(exc)
