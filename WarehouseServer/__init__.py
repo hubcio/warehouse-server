@@ -3,6 +3,8 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_httpauth import HTTPBasicAuth
+from flask_autodoc import Autodoc
+
 from WarehouseServer import serial_thread
 
 # initialization
@@ -16,7 +18,9 @@ app.config["JSON_SORT_KEYS"] = False
 # extensions
 db = SQLAlchemy(app)
 auth = HTTPBasicAuth()
-ser = serial_thread.SerialThread()
+com = serial_thread.WarehouseCommunicator()
+auto = Autodoc(app)
 
 from WarehouseServer import views, models
 from models import User
+
