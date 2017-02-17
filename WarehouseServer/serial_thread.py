@@ -31,6 +31,7 @@ class WarehouseCommunicator(threading.Thread):
         while True:
             for line in self.serial:
                 try:
+                    #print line
                     self.parsed_line = json.loads(line)
                     self.position_x = self.parsed_line['x']
                     self.position_y = self.parsed_line['y']
@@ -40,3 +41,32 @@ class WarehouseCommunicator(threading.Thread):
                     self.current_z = self.parsed_line['cz']
                 except Exception as exc:
                     logger.error(exc)
+
+    def move_x(self, value):
+        command = ':00-'+str(value).zfill(8)+'\r\n'
+        print command
+        self.serial.write(command)
+
+    def move_y(self, value):
+        self.serial.write(':01-'+str(value).zfill(8)+'\r\n')
+
+    def move_z(self, value):
+        self.serial.write(':02-'+str(value).zfill(8)+'\r\n')
+
+    def move_servo(self, value):
+        self.serial.write(':03-'+str(value).zfill(8)+'\r\n')
+
+    def reset_stm(self):
+        command = '-99:'+str(0).zfill(8)+'\r\n'
+        self.serial.write(command)
+
+
+    # def home_x(self, value):
+    #     self.serial.write(':03-'+str(value).zfill(8)+'\r\n')
+    #
+    # def home_y(self, value):
+    #     self.serial.write('-03:'+str(value).zfill(8)+'\r\n')
+    #
+    # def home_z(self, value):
+    #     self.serial.write('-03:'+str(value).zfill(8)+'\r\n')
+

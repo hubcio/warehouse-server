@@ -12,8 +12,6 @@ def requires_roles(*roles):
     def wrapper(f):
         @wraps(f)
         def wrapped(*args, **kwargs):
-            print roles
-            print g.user.role
             if get_current_user_role() not in roles:
                 return error_response()
             return f(*args, **kwargs)
@@ -41,10 +39,6 @@ def verify_password(username_or_token, password):
         if not user or not user.verify_password(password):
             return False
     g.user = user
-    g.user.role = user.role
-
-    #g.user.role = User.query.filter_by(username=username_or_token).first()
-    print user.role
     return True
 
 
@@ -64,12 +58,17 @@ def get_position():
     return jsonify(data)
 
 
+@app.route('/api/warehouse/move/x/<int:value>', methods=['GET'])
+def move_x(value):
+    com.move_x(value)
+    return jsonify({'success': True})
+
+
 @app.route('/api/drawers/mine', methods=['GET'])
 @auto.doc()
-@requires_roles('admin', 'user')
 @auth.login_required
+@requires_roles('admin', 'user')
 def show_current_user_drawers():
-    print g.user.role
     cols = ['drawer_id', 'description_short', 'description_long', 'rfid_id']
     data = Drawer.query.filter(Drawer.users.any(user_id=g.user.user_id)).all()
     drawers = [{col: getattr(d, col) for col in cols} for d in data]
@@ -81,13 +80,17 @@ def show_current_user_drawers():
 @auth.login_required
 @requires_roles('admin')
 def show_all_drawers():
-    return
+    """Return all drawers"""
+    cols = ['drawer_id', 'description_short', 'description_long', 'rfid_id']
+    data = Drawer.query.all()
+    drawers = [{col: getattr(d, col) for col in cols} for d in data]
+    return jsonify(drawers=drawers)
 
 
 @app.route('/api/drawers/<int:drawer_id>', methods=['PUT', 'POST', 'DELETE'])
 @auto.doc()
-@requires_roles('admin', 'user')
 @auth.login_required
+@requires_roles('admin', 'user')
 def drawer_handler():
     if request.method == 'PUT':
         # TODO putting handler
@@ -116,7 +119,7 @@ def new_drawer():
     drawer.is_empty = 0
 
     current_user = User.query.get(g.user.user_id)  # get current user
-    current_user.drawers.append(drawer)  # and append that drawer to him!
+    current_user.drawers.append(drawer)            # and assign that drawer to him
 
     db.session.add(current_user)
     db.session.commit()
@@ -177,9 +180,9 @@ def get_user(user_id):
 
 
 @app.route('/api/users/token')
-@requires_roles('admin', 'user')
-@auth.login_required
 @auto.doc()
+@auth.login_required
+@requires_roles('admin', 'user')
 def get_auth_token():
     """Returns valid token."""
     token = g.user.generate_auth_token(600)
