@@ -165,6 +165,7 @@ def get_all_users():
 @auth.login_required
 @requires_roles('admin')
 def get_user(user_id):
+    """GET info about user or DELETE user"""
     if request.method == 'GET':
         user = User.query.get(user_id)
         if not user:
