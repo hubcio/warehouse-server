@@ -31,7 +31,7 @@ class WarehouseCommunicator(threading.Thread):
         while True:
             for line in self.serial:
                 try:
-                    #print line
+                    print line
                     self.parsed_line = json.loads(line)
                     self.position_x = self.parsed_line['x']
                     self.position_y = self.parsed_line['y']
