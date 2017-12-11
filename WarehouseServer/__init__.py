@@ -25,7 +25,6 @@ from WarehouseServer import views, models
 from models import User
 
 # TODO server
-# - login manager
 # - all commands
 
 # TODO stm

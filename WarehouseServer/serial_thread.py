@@ -1,72 +1,83 @@
 # -*- encoding: utf-8 -*-
 
 import json
-import threading
+from threading import Thread
 import logging
 import serial
 
 logger = logging.getLogger(__name__)
 
 
-class WarehouseCommunicator(threading.Thread):
-    position_x = 0
-    position_y = 0
-    position_z = 0
-    current_x = 0
-    current_y = 0
-    current_z = 0
-    parsed_line = ''
+class WarehouseCommunicator(Thread):
+    x_pos_fdb = 0
+    y_pos_fdb = 0
+    z_pos_fdb = 0
+    x_current = 0
+    y_current = 0
+    z_current = 0
+    state = ''
 
-    def __init__(self):
-        super(WarehouseCommunicator, self).__init__(name=self.__class__.__name__)
-        self.serial = serial.Serial(
-                port='/dev/ttyAMA0',
-                baudrate=115200,
-                parity=serial.PARITY_NONE,
-                stopbits=serial.STOPBITS_ONE,
-                bytesize=serial.EIGHTBITS)
-        print('Warehouse UART running!')
+    def __init__(self, level=logging.INFO, port='/dev/ttyAMA0', baudrate=115200,
+                 parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
+                 bytesize=serial.EIGHTBITS):
+        Thread.__init__(self)
+        logging.basicConfig()
+        logger.setLevel(level)
+        formatter = logging.Formatter("%(asctime)s %(threadName)-11s %(levelname)-10s %(message)s")
+        self.serial = serial.Serial(port=port, baudrate=baudrate, bytesize=bytesize,
+                                    stopbits=stopbits, parity=parity, timeout=3.0)
+        self.daemon = True
+        logger.info("STM <--> Raspberry communication started!")
 
     def run(self):
         while True:
             for line in self.serial:
                 try:
-                    print line
-                    self.parsed_line = json.loads(line)
-                    self.position_x = self.parsed_line['x']
-                    self.position_y = self.parsed_line['y']
-                    self.position_z = self.parsed_line['z']
-                    self.current_x = self.parsed_line['cx']
-                    self.current_y = self.parsed_line['cy']
-                    self.current_z = self.parsed_line['cz']
+                    parsed_line = json.loads(line)
+                    self.x_pos_fdb = parsed_line['x']
+                    self.y_pos_fdb = parsed_line['y']
+                    self.z_pos_fdb = parsed_line['z']
+                    self.x_current = parsed_line['cx']
+                    self.y_current = parsed_line['cy']
+                    self.z_current = parsed_line['cz']
+                    logger.debug("Received: " + line)
                 except Exception as exc:
                     logger.error(exc)
 
-    def move_x(self, value):
-        command = ':00-'+str(value).zfill(8)+'\r\n'
-        print command
-        self.serial.write(command)
+    def send(self, command, value=99):
+        command_string = ':' + str(command).zfill(2) + '-' + str(value).zfill(8) + '\r\n'
+        logger.info("Sent: " + command_string)
+        self.serial.write(command_string)
 
-    def move_y(self, value):
-        self.serial.write(':01-'+str(value).zfill(8)+'\r\n')
+    def move_x_absolute(self, value):
+        self.send(0, value)
 
-    def move_z(self, value):
-        self.serial.write(':02-'+str(value).zfill(8)+'\r\n')
+    def move_y_absolute(self, value):
+        self.send(1, value)
+
+    def move_z_absolute(self, value):
+        self.send(2, value)
+
+    def move_x_relative(self, value):
+        self.send(0, value + self.x_pos_fdb)
+
+    def move_y_relative(self, value):
+        self.send(1, value + self.y_pos_fdb)
+
+    def move_z_relative(self, value):
+        self.send(2, value + self.z_pos_fdb)
 
     def move_servo(self, value):
-        self.serial.write(':03-'+str(value).zfill(8)+'\r\n')
+        self.send(3, value)
 
     def reset_stm(self):
-        command = '-99:'+str(0).zfill(8)+'\r\n'
-        self.serial.write(command)
+        self.send(99)
 
+    def home_x(self):
+        self.send(4)
 
-    # def home_x(self, value):
-    #     self.serial.write(':03-'+str(value).zfill(8)+'\r\n')
-    #
-    # def home_y(self, value):
-    #     self.serial.write('-03:'+str(value).zfill(8)+'\r\n')
-    #
-    # def home_z(self, value):
-    #     self.serial.write('-03:'+str(value).zfill(8)+'\r\n')
+    def home_y(self):
+        self.send(5)
 
+    def home_z(self):
+        self.send(6)

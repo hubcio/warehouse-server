@@ -6,6 +6,9 @@ from flask import abort, request, jsonify, g, url_for
 
 from models import User, Drawer
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def requires_roles(*roles):
@@ -45,22 +48,85 @@ def verify_password(username_or_token, password):
 @app.route('/api/warehouse/state', methods=['GET'])
 @auto.doc()
 def get_position():
-    x = com.position_x
-    y = com.position_y
-    z = com.position_z
-    cx = com.current_x
-    cy = com.current_y
-    cz = com.current_z
-    print com.position_x
-
-    state = "idle"
-    data = {"x": x, "y": y, "z": z, "cx": cx, "cy": cy, "cz": cz, "state": state}
+    state = com.state
+    data = {"x": com.x_pos_fdb,
+            "y": com.y_pos_fdb,
+            "z": com.z_pos_fdb,
+            "cx": com.x_current,
+            "cy": com.y_current,
+            "cz": com.z_current,
+            "state": state}
     return jsonify(data)
 
 
-@app.route('/api/warehouse/move/x/<int:value>', methods=['GET'])
-def move_x(value):
-    com.move_x(value)
+@app.route('/api/warehouse/rfid')
+@auto.doc()
+def read_rfid():
+    card_data = 'NaN'
+    print(card_data)
+    return jsonify({'rfid_id': card_data})
+
+
+@app.route('/api/warehouse/move_absolute/x/<int:value>', methods=['GET'])
+@auto.doc()
+def move_x_absolute(value):
+    com.move_x_absolute(value)
+    return jsonify({'success': True})
+
+
+@app.route('/api/warehouse/move_absolute/y/<int:value>', methods=['GET'])
+@auto.doc()
+def move_y_absolute(value):
+    com.move_y_absolute(value)
+    return jsonify({'success': True})
+
+
+@app.route('/api/warehouse/move_absolute/z/<int:value>', methods=['GET'])
+@auto.doc()
+def move_z_absolute(value):
+    com.move_z_absolute(value)
+    return jsonify({'success': True})
+
+
+@app.route('/api/warehouse/move_relative/x/<int:value>', methods=['GET'])
+@auto.doc()
+def move_x_relative(value):
+    com.move_x_relative(value)
+    return jsonify({'success': True})
+
+
+@app.route('/api/warehouse/move_relative/y/<int:value>', methods=['GET'])
+@auto.doc()
+def move_y_relative(value):
+    com.move_y_relative(value)
+    return jsonify({'success': True})
+
+
+@app.route('/api/warehouse/move_relative/z/<int:value>', methods=['GET'])
+@auto.doc()
+def move_z_relative(value):
+    com.move_z_relative(value)
+    return jsonify({'success': True})
+
+
+@app.route('/api/warehouse/home_x', methods=['GET'])
+@auto.doc()
+def home_x():
+    com.home_x()
+    return jsonify({'success': True})
+
+
+@app.route('/api/warehouse/home_y', methods=['GET'])
+@auto.doc()
+def home_y():
+    com.home_y()
+    return jsonify({'success': True})
+
+
+@app.route('/api/warehouse/home_z', methods=['GET'])
+@auto.doc()
+def home_z():
+    com.home_z()
     return jsonify({'success': True})
 
 
@@ -69,6 +135,7 @@ def move_x(value):
 @auth.login_required
 @requires_roles('admin', 'user')
 def show_current_user_drawers():
+    """Show drawers that belong to requesting user"""
     cols = ['drawer_id', 'description_short', 'description_long', 'rfid_id']
     data = Drawer.query.filter(Drawer.users.any(user_id=g.user.user_id)).all()
     drawers = [{col: getattr(d, col) for col in cols} for d in data]
@@ -91,7 +158,7 @@ def show_all_drawers():
 @auto.doc()
 @auth.login_required
 @requires_roles('admin', 'user')
-def drawer_handler():
+def drawer_handler(drawer_id):
     if request.method == 'PUT':
         # TODO putting handler
         return
@@ -119,7 +186,7 @@ def new_drawer():
     drawer.is_empty = 0
 
     current_user = User.query.get(g.user.user_id)  # get current user
-    current_user.drawers.append(drawer)            # and assign that drawer to him
+    current_user.drawers.append(drawer)  # and assign that drawer to him
 
     db.session.add(current_user)
     db.session.commit()

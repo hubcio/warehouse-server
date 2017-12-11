@@ -61,12 +61,18 @@ class User(db.Model):
 
 class Drawer(db.Model):
     __tablename__ = 'drawers'
-    drawer_id = db.Column(db.Integer, primary_key=True, index=True) #const
-    description_short = db.Column(db.String(128))                   #var
-    description_long = db.Column(db.String(1024))                   #var
-    rfid_id = db.Column(db.String(128), unique=True)                #const
-    is_empty = db.Column(db.Boolean)                                #var
-    date_modified = db.Column(db.DateTime)                          #var
-    x = db.Column(db.Integer)                                       #const
-    y = db.Column(db.Integer)                                       #const
-    z = db.Column(db.Integer)                                       #const
+    drawer_id = db.Column(db.Integer, primary_key=True, index=True)  # const
+    description_short = db.Column(db.String(128))                    # var
+    description_long = db.Column(db.String(1024))                    # var
+    rfid_id = db.Column(db.String(128), unique=True)                 # const
+    is_empty = db.Column(db.Boolean)                                 # var
+    date_modified = db.Column(db.DateTime)                           # var
+    x = db.Column(db.Integer)                                        # const
+    y = db.Column(db.Integer)                                        # const
+    z = db.Column(db.Integer)                                        # const
+
+    def get_range(self):
+        if self.drawer_id in range(0, 19):
+            return 'transA'
+        if self.drawer_id in range(20, 39):
+            return 'transAB'
