@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 
 import os
-from WarehouseServer import app, com, db, User
+from WarehouseServer import app, com, db, User, servo
 
 # ----------------------------------------
 # launch
@@ -10,6 +10,7 @@ from WarehouseServer import app, com, db, User
 
 if __name__ == '__main__':
     com.start()  # TODO comment this if running on local pc
+    servo.start()
     if not os.path.exists('db.sqlite'):
         db.create_all()
         User.add_super_admin()

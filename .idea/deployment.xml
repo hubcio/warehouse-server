@@ -2,6 +2,27 @@
 <project version="4">
   <component name="PublishConfigData" serverName="rpi-pwr">
     <serverData>
+      <paths name="Copy of project-level server 'rpi-pwr'">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/" local="$PROJECT_DIR$" web="" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="Copy of project-level server 'rpi-pwr' (1)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/" local="$PROJECT_DIR$" web="" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="Copy of project-level server 'rpi-pwr' (2)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/" local="$PROJECT_DIR$" web="" />
+          </mappings>
+        </serverdata>
+      </paths>
       <paths name="rpi-home">
         <serverdata>
           <mappings>

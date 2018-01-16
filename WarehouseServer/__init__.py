@@ -5,7 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_httpauth import HTTPBasicAuth
 from flask_autodoc import Autodoc
 
-from WarehouseServer import serial_thread
+from WarehouseServer import serial_thread, servo_thread, path_thread
 
 # initialization
 app = Flask(__name__)
@@ -19,6 +19,8 @@ app.config["JSON_SORT_KEYS"] = False
 db = SQLAlchemy(app)
 auth = HTTPBasicAuth()
 com = serial_thread.WarehouseCommunicator()
+path = path_thread.WarehousePathfinder()
+servo = servo_thread.ServoController()
 auto = Autodoc(app)
 
 from WarehouseServer import views, models

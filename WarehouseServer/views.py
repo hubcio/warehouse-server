@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 
-from WarehouseServer import app, db, auth, com, auto
+from WarehouseServer import app, db, auth, com, auto, servo, logic
 from functools import wraps
 from flask import abort, request, jsonify, g, url_for
 
@@ -55,6 +55,7 @@ def get_position():
             "cx": com.x_current,
             "cy": com.y_current,
             "cz": com.z_current,
+            "servo": servo.get_position(),
             "state": state}
     return jsonify(data)
 
@@ -67,67 +68,99 @@ def read_rfid():
     return jsonify({'rfid_id': card_data})
 
 
-@app.route('/api/warehouse/move_absolute/x/<int:value>', methods=['GET'])
+@app.route('/api/warehouse/move/absolute/x/<int:value>', methods=['GET'])
 @auto.doc()
 def move_x_absolute(value):
     com.move_x_absolute(value)
-    return jsonify({'success': True})
+    return get_position()
 
 
-@app.route('/api/warehouse/move_absolute/y/<int:value>', methods=['GET'])
+@app.route('/api/warehouse/move/absolute/y/<int:value>', methods=['GET'])
 @auto.doc()
 def move_y_absolute(value):
     com.move_y_absolute(value)
-    return jsonify({'success': True})
+    return get_position()
 
 
-@app.route('/api/warehouse/move_absolute/z/<int:value>', methods=['GET'])
+@app.route('/api/warehouse/move/absolute/z/<int:value>', methods=['GET'])
 @auto.doc()
 def move_z_absolute(value):
     com.move_z_absolute(value)
-    return jsonify({'success': True})
+    return get_position()
 
 
-@app.route('/api/warehouse/move_relative/x/<int:value>', methods=['GET'])
+@app.route('/api/warehouse/move/relative/x/<int:value>', methods=['GET'])
 @auto.doc()
 def move_x_relative(value):
     com.move_x_relative(value)
-    return jsonify({'success': True})
+    return get_position()
 
+@app.route('/api/warehouse/move/relative/x/-<int:value>', methods=['GET'])
+def move_x_relative_decrement(value):
+    com.move_x_relative(-value)
+    return get_position()
 
-@app.route('/api/warehouse/move_relative/y/<int:value>', methods=['GET'])
+@app.route('/api/warehouse/move/relative/y/<int:value>', methods=['GET'])
 @auto.doc()
 def move_y_relative(value):
     com.move_y_relative(value)
     return jsonify({'success': True})
 
 
-@app.route('/api/warehouse/move_relative/z/<int:value>', methods=['GET'])
+@app.route('/api/warehouse/move/relative/y/-<int:value>', methods=['GET'])
+def move_y_relative_decrement(value):
+    com.move_y_relative(-value)
+    return get_position()
+
+
+@app.route('/api/warehouse/move/relative/z/<int:value>', methods=['GET'])
 @auto.doc()
 def move_z_relative(value):
     com.move_z_relative(value)
-    return jsonify({'success': True})
+    return get_position()
+
+@app.route('/api/warehouse/move/relative/z/-<int:value>', methods=['GET'])
+def move_z_relative_decrement(value):
+    com.move_z_relative(-value)
+    return get_position()
 
 
-@app.route('/api/warehouse/home_x', methods=['GET'])
+@app.route('/api/warehouse/home/x', methods=['GET'])
 @auto.doc()
 def home_x():
     com.home_x()
-    return jsonify({'success': True})
+    return get_position()
 
 
-@app.route('/api/warehouse/home_y', methods=['GET'])
+@app.route('/api/warehouse/home/y', methods=['GET'])
 @auto.doc()
 def home_y():
     com.home_y()
-    return jsonify({'success': True})
+    return get_position()
 
 
-@app.route('/api/warehouse/home_z', methods=['GET'])
+@app.route('/api/warehouse/home/z', methods=['GET'])
 @auto.doc()
 def home_z():
     com.home_z()
-    return jsonify({'success': True})
+    return get_position()
+
+@app.route('/api/warehouse/move/absolute/servo/<int:value>', methods=['GET'])
+@auto.doc()
+def move_servo(value):
+    """Set servo position to absolute percent value"""
+    servo.move_percent(value)
+    return get_position()
+
+@app.route('/api/warehouse/move/test1', methods=['GET'])
+@auto.doc()
+def move_test():
+    com.move_x_relative(3000, True)
+    com.move_z_relative(3000, True)
+    com.move_x_relative(-2800)
+    com.move_z_relative(-2800)
+
+    return get_position()
 
 
 @app.route('/api/drawers/mine', methods=['GET'])
