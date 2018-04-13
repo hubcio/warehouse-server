@@ -10,10 +10,9 @@ logger = logging.getLogger(__name__)
 
 
 class WarehouseCommunicator(Thread):
-    x_pos_fdb = 0
-    y_pos_fdb = 0
-    z_pos_fdb = 0
-    state = ''
+    x = 0
+    y = 0
+    z = 0
 
     def __init__(self, level=logging.INFO, port='/dev/ttyAMA0', baudrate=115200,
                  parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
@@ -31,21 +30,22 @@ class WarehouseCommunicator(Thread):
         while True:
             for line in self.serial:
                 try:
-
                     parsed_line = json.loads(line[-29:])
-                    if parsed_line['x'] != self.x_pos_fdb or parsed_line['y'] != self.y_pos_fdb or parsed_line['z'] != self.z_pos_fdb:
+                    if parsed_line['x'] != self.x or parsed_line['y'] != self.y or parsed_line['z'] != self.z:
                         logger.info("Received: " + line)
 
-                    self.x_pos_fdb = parsed_line['x']
-                    self.y_pos_fdb = parsed_line['y']
-                    self.z_pos_fdb = parsed_line['z']
+                    self.x = parsed_line['x']
+                    self.y = parsed_line['y']
+                    self.z = parsed_line['z']
                 except Exception as exc:
                     logger.error(exc)
 
     def send(self, command, value=99):
+        if value < 0:
+            value = 0
+            logger.error("Wrong value!" + ':' + str(command).zfill(2) + '-' + str(value).zfill(8))
+
         command_string = ':' + str(command).zfill(2) + '-' + str(value).zfill(8) + '\r\n'
-        logger.info("Sent: " + command_string)
+        logger.debug("Sent: " + command_string)
         self.serial.write(command_string)
-        time.sleep(0.001)
-
-
+        time.sleep(0.01)

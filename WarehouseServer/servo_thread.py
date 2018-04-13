@@ -5,6 +5,7 @@ import os
 
 logger = logging.getLogger(__name__)
 
+
 class ServoController(Thread):
     positionPercentDesired = 0
     positionPercentCurrent = 0
@@ -18,16 +19,14 @@ class ServoController(Thread):
         logger.info("Servo task started!")
 
     def run(self):
-        while True:
-            if self.positionPercentCurrent > self.positionPercentDesired:
-                self.positionPercentCurrent-=1
+        if self.positionPercentCurrent > self.positionPercentDesired:
+            self.positionPercentCurrent -= 1
 
-            if self.positionPercentDesired > self.positionPercentCurrent:
-                self.positionPercentCurrent+=1
+        if self.positionPercentDesired < self.positionPercentCurrent:
+            self.positionPercentCurrent += 1
 
-            syscallString = "echo 4=%d%% > /dev/servoblaster" % self.positionPercentCurrent
-            os.system(syscallString)
-            time.sleep(0.05)
+        os.system("echo 4=%d%% > /dev/servoblaster" % self.positionPercentCurrent)
+        time.sleep(0.05)
 
     def move_percent(self, value):
         self.positionPercentDesired = value

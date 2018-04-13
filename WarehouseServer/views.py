@@ -1,12 +1,14 @@
 # -*- encoding: utf-8 -*-
 
-from WarehouseServer import app, db, auth, com, auto, servo, logic
+from WarehouseServer import app, db, auth, auto, servo, path, com
+from path_thread import SinglePoint
 from functools import wraps
 from flask import abort, request, jsonify, g, url_for
-
+import time
 from models import User, Drawer
 from datetime import datetime
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -48,13 +50,13 @@ def verify_password(username_or_token, password):
 @app.route('/api/warehouse/state', methods=['GET'])
 @auto.doc()
 def get_position():
-    state = com.state
-    data = {"x": com.x_pos_fdb,
-            "y": com.y_pos_fdb,
-            "z": com.z_pos_fdb,
-            "cx": com.x_current,
-            "cy": com.y_current,
-            "cz": com.z_current,
+    state = 'unknown'
+    data = {"x": com.x,
+            "y": com.y,
+            "z": com.z,
+            "cx": 0,
+            "cy": 0,
+            "cz": 0,
             "servo": servo.get_position(),
             "state": state}
     return jsonify(data)
@@ -71,95 +73,108 @@ def read_rfid():
 @app.route('/api/warehouse/move/absolute/x/<int:value>', methods=['GET'])
 @auto.doc()
 def move_x_absolute(value):
-    com.move_x_absolute(value)
+    path.move_x_absolute(value)
     return get_position()
 
 
 @app.route('/api/warehouse/move/absolute/y/<int:value>', methods=['GET'])
 @auto.doc()
 def move_y_absolute(value):
-    com.move_y_absolute(value)
+    path.move_y_absolute(value)
     return get_position()
 
 
 @app.route('/api/warehouse/move/absolute/z/<int:value>', methods=['GET'])
 @auto.doc()
 def move_z_absolute(value):
-    com.move_z_absolute(value)
+    path.move_z_absolute(value)
     return get_position()
 
 
 @app.route('/api/warehouse/move/relative/x/<int:value>', methods=['GET'])
 @auto.doc()
 def move_x_relative(value):
-    com.move_x_relative(value)
+    path.move_x_relative(value)
     return get_position()
+
 
 @app.route('/api/warehouse/move/relative/x/-<int:value>', methods=['GET'])
 def move_x_relative_decrement(value):
-    com.move_x_relative(-value)
+    path.move_x_relative(-value)
     return get_position()
+
 
 @app.route('/api/warehouse/move/relative/y/<int:value>', methods=['GET'])
 @auto.doc()
 def move_y_relative(value):
-    com.move_y_relative(value)
+    path.move_y_relative(value)
     return jsonify({'success': True})
 
 
 @app.route('/api/warehouse/move/relative/y/-<int:value>', methods=['GET'])
 def move_y_relative_decrement(value):
-    com.move_y_relative(-value)
+    path.move_y_relative(-value)
     return get_position()
 
 
 @app.route('/api/warehouse/move/relative/z/<int:value>', methods=['GET'])
 @auto.doc()
 def move_z_relative(value):
-    com.move_z_relative(value)
+    path.move_z_relative(value)
     return get_position()
+
 
 @app.route('/api/warehouse/move/relative/z/-<int:value>', methods=['GET'])
 def move_z_relative_decrement(value):
-    com.move_z_relative(-value)
+    path.move_z_relative(-value)
     return get_position()
 
 
 @app.route('/api/warehouse/home/x', methods=['GET'])
 @auto.doc()
 def home_x():
-    com.home_x()
+    path.home_x()
     return get_position()
 
 
 @app.route('/api/warehouse/home/y', methods=['GET'])
 @auto.doc()
 def home_y():
-    com.home_y()
+    path.home_y()
     return get_position()
 
 
 @app.route('/api/warehouse/home/z', methods=['GET'])
 @auto.doc()
 def home_z():
-    com.home_z()
+    path.home_z()
     return get_position()
+
+
+@app.route('/api/warehouse/home/all', methods=['GET'])
+@auto.doc()
+def home_all():
+    path.home_all()
+    return get_position()
+
 
 @app.route('/api/warehouse/move/absolute/servo/<int:value>', methods=['GET'])
 @auto.doc()
 def move_servo(value):
     """Set servo position to absolute percent value"""
-    servo.move_percent(value)
+    os.system("echo 4=%d%% > /dev/servoblaster" % value)
     return get_position()
 
-@app.route('/api/warehouse/move/test1', methods=['GET'])
-@auto.doc()
-def move_test():
-    com.move_x_relative(3000, True)
-    com.move_z_relative(3000, True)
-    com.move_x_relative(-2800)
-    com.move_z_relative(-2800)
 
+@app.route('/api/warehouse/move/test1', methods=['GET'])
+def move_test():
+    path.sequence()
+    return get_position()
+
+
+@app.route('/api/warehouse/move/test2', methods=['GET'])
+def move_test2():
+    path.sequence_backward()
     return get_position()
 
 
